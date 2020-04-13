@@ -6,6 +6,8 @@ app = Flask(__name__)
 app.config.from_object(Config)
 db = SQLAlchemy(app)
 
+from webapp.model import blog
+
 @app.route('/')
 def hello_world():
     return 'Hello World!'
