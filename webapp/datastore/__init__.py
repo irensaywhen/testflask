@@ -87,10 +87,11 @@ class BaseDatastore(object):
 
 
 
-from webapp.datastore.user import RoleDatastore
+from webapp.datastore.user import RoleDatastore, UserDatastore
 
 class Datastore(object):
-    def __init__(self, db, role_model):
+    def __init__(self, db, user_model, role_model):
         self.db = db
         self.role = RoleDatastore(db, role_model=role_model)
+        self.user = UserDatastore(db, user_model=user_model, role_model=role_model)
 
