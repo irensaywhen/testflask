@@ -7,7 +7,7 @@ class Defaults(object):
     STATUS_DRAFT = 1
 
 
-class Config(object):
+class Config(Defaults):
     APPLICATION_DIR = os.path.dirname(os.path.realpath(__file__))
     SQLALCHEMY_DATABASE_URI = 'sqlite:///%s/blog.db' % APPLICATION_DIR
     SQLALCHEMY_TRACK_MODIFICATIONS = True

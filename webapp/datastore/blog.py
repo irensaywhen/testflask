@@ -17,13 +17,16 @@ class PostDatastore(BaseDatastore):
         self.tag = TagDatastore(db, tag_model, post_model)
         BaseDatastore.__init__(self, db, post_model)
 
-    def _prepare_modify_args(self, post, tag):
-        tag = self.tag.get(tag)
+    def _prepare_modify_args(self, post, tags):
+        if not self._is_listlike(tags):
+            tags = [tags]
+        tgs = [self.tag.get(tag) for tag in tags]
         post = self.get(post)
-        return post, tag
+        return post, tgs
 
     def _prepare_create_args(self, **kwargs):
-        kwargs['status'] = _config.get('STATUS_PUBLIC')
+        status = kwargs.get('status', _config.get('STATUS_PUBLIC'))
+        kwargs['status'] = status
         tags = kwargs.get('tags', [])
         for tag in tags:
             rn = tag.name if isinstance(tag, self.tag.model) else tag
@@ -42,14 +45,18 @@ class PostDatastore(BaseDatastore):
         Creates and returns a new Post from the given parameters.
         """
 
-        value = self._prepare_modify_args(kwargs.pop('post'), kwargs.pop('tag'))
-        if value[1]:
-            kwargs['tag'] = value[1]
-        row = self.model(**kwargs)
+        value = self._prepare_create_args(**kwargs)
+        row = self.model(**value)
         rv = self.put(row)
         if commit:
             self.commit()
         return rv
+
+    def add_tags(self, post, tags):
+        post, tags = self._prepare_modify_args(self, post, tags)
+        for tag in tags:
+            if tag not in post.tags:
+                post.tags.append(tag)
 
 
 class TagDatastore(BaseDatastore):
@@ -87,10 +94,8 @@ class TagDatastore(BaseDatastore):
         Creates and returns a new Tag from the given parameters.
         """
 
-        value = self._prepare_modify_args(kwargs.pop('tag'), kwargs.pop('post'))
-        if value[1]:
-            kwargs['post'] = value[1]
-        row = self.model(**kwargs)
+        value = self._prepare_create_args(**kwargs)
+        row = self.model(**value)
         rv = self.put(row)
         if commit:
             self.commit()
